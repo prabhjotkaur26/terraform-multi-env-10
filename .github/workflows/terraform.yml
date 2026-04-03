@@ -6,21 +6,22 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        required: true       
- env:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-      aws-region: ${{ env.AWS_REGION }}
+        description: "Select environment"
+        required: false
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set ENV
+      - name: Set Environment
         run: |
           if [ "${{ github.event.inputs.environment }}" != "" ]; then
             echo "ENV=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
@@ -30,7 +31,7 @@ jobs:
             if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then echo "ENV=prod" >> $GITHUB_ENV; fi
           fi
 
-      - name: Set Region
+      - name: Set AWS Region
         run: |
           if [ "$ENV" == "dev" ]; then echo "AWS_REGION=ap-south-1" >> $GITHUB_ENV; fi
           if [ "$ENV" == "qa" ]; then echo "AWS_REGION=us-east-1" >> $GITHUB_ENV; fi

@@ -7,7 +7,6 @@ on:
     inputs:
       environment:
         required: true
-        default: dev
         
  env:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}

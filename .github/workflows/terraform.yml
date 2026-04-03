@@ -1,4 +1,4 @@
-name: terraform-multi-env-10
+name: terraform-s3-deploy
 
 on:
   push:
@@ -35,10 +35,6 @@ jobs:
           if [ "$ENV" == "dev" ]; then echo "AWS_REGION=ap-south-1" >> $GITHUB_ENV; fi
           if [ "$ENV" == "qa" ]; then echo "AWS_REGION=us-east-1" >> $GITHUB_ENV; fi
           if [ "$ENV" == "prod" ]; then echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV; fi
-
-      - name: Export AWS_REGION for Terraform
-        run: |
-          echo "AWS_REGION=${AWS_REGION}" >> $GITHUB_ENV
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2

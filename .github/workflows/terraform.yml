@@ -6,12 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        required: true
-        
+        required: true       
  env:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+      aws-region: ${{ env.AWS_REGION }}
 
 jobs:
   deploy:

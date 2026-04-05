@@ -1,59 +1,27 @@
-name: terraform-multi-env-10
+name: Terraform
 
-on:
-  push:
-    branches: [dev, qa, main]
-  workflow_dispatch:
-    inputs:
-      environment:
-        required: true
-        default: dev
-
-env:
-  AWS_DEFAULT_REGION: ap-south-1
-
-permissions:
-  id-token: write
-  contents: read
+on: [push]
 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set ENV
-        run: |
-          if [ "${{ github.event.inputs.environment }}" != "" ]; then
-            echo "ENV=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-          else
-            if [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then echo "ENV=dev" >> $GITHUB_ENV; fi
-            if [[ "${GITHUB_REF}" == "refs/heads/qa" ]]; then echo "ENV=qa" >> $GITHUB_ENV; fi
-            if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then echo "ENV=prod" >> $GITHUB_ENV; fi
-          fi
-
-      - name: Set Region
-        run: |
-          if [ "$ENV" == "dev" ]; then echo "AWS_REGION=ap-south-1" >> $GITHUB_ENV; fi
-          if [ "$ENV" == "qa" ]; then echo "AWS_REGION=us-east-1" >> $GITHUB_ENV; fi
-          if [ "$ENV" == "prod" ]; then echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV; fi
-
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
 
-      # ✅ FIXED: Use OIDC instead of access keys
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::636155394208:role/github-actions-terraform-role
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Clean Terraform cache
+        run: |
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
 
       - name: Terraform Init
-        run: terraform init
-        working-directory: environments/${{ env.ENV }}
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: environments/${{ env.ENV }}
+        run: |
+          terraform init \
+            -backend-config="bucket=terraform-bucket-prabhjot" \
+            -backend-config="key=terraform.tfstate" \
+            -backend-config="region=ap-south-1" \
+            -reconfigure

@@ -13,34 +13,28 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - env: dev
+            region: ap-south-1
+          - env: qa
+            region: us-east-1
+          - env: prod
+            region: eu-west-1
+
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2️⃣ Set Environment (dev / qa / prod)
-      - name: Set ENV
+      - name: Setup ENV
         run: |
-          if [ "${{ github.event.inputs.environment }}" != "" ]; then
-            echo "ENV=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-          else
-            if [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then echo "ENV=dev" >> $GITHUB_ENV; fi
-            if [[ "${GITHUB_REF}" == "refs/heads/qa" ]]; then echo "ENV=qa" >> $GITHUB_ENV; fi
-            if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then echo "ENV=prod" >> $GITHUB_ENV; fi
-          fi
+          echo "ENV=${{ matrix.env }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ matrix.region }}" >> $GITHUB_ENV
 
-      # 3️⃣ Set AWS Region (for resources only)
-      - name: Set Region
-        run: |
-          if [ "$ENV" == "dev" ]; then echo "AWS_REGION=ap-south-1" >> $GITHUB_ENV; fi
-          if [ "$ENV" == "qa" ]; then echo "AWS_REGION=us-east-1" >> $GITHUB_ENV; fi
-          if [ "$ENV" == "prod" ]; then echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV; fi
-
-      # 4️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      # 5️⃣ Configure AWS credentials
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -48,16 +42,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 6️⃣ Clean Terraform cache (VERY IMPORTANT)
-      - name: Clean Terraform cache
-        run: |
-          rm -rf .terraform
-          rm -f .terraform.lock.hcl
-        working-directory: environments/${{ env.ENV }}
-
-      # 7️⃣ Terraform Init (FIXED ✅)
       - name: Terraform Init
         run: |
+          rm -rf .terraform
           terraform init \
             -backend-config="bucket=terraform-bucket-prabhjot" \
             -backend-config="key=${{ env.ENV }}/terraform.tfstate" \
@@ -65,12 +52,6 @@ jobs:
             -reconfigure
         working-directory: environments/${{ env.ENV }}
 
-      # 8️⃣ Terraform Plan (optional but recommended)
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: environments/${{ env.ENV }}
-
-      # 9️⃣ Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: environments/${{ env.ENV }}

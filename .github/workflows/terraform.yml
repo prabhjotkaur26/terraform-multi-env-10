@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout
         uses: actions/checkout@v3
 
+      # 2️⃣ Set Environment (dev / qa / prod)
       - name: Set ENV
         run: |
           if [ "${{ github.event.inputs.environment }}" != "" ]; then
@@ -27,15 +29,18 @@ jobs:
             if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then echo "ENV=prod" >> $GITHUB_ENV; fi
           fi
 
+      # 3️⃣ Set AWS Region (for resources only)
       - name: Set Region
         run: |
           if [ "$ENV" == "dev" ]; then echo "AWS_REGION=ap-south-1" >> $GITHUB_ENV; fi
           if [ "$ENV" == "qa" ]; then echo "AWS_REGION=us-east-1" >> $GITHUB_ENV; fi
           if [ "$ENV" == "prod" ]; then echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV; fi
 
+      # 4️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
+      # 5️⃣ Configure AWS credentials
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -43,10 +48,29 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Terraform Init
-        run: terraform init
+      # 6️⃣ Clean Terraform cache (VERY IMPORTANT)
+      - name: Clean Terraform cache
+        run: |
+          rm -rf .terraform
+          rm -f .terraform.lock.hcl
         working-directory: environments/${{ env.ENV }}
 
+      # 7️⃣ Terraform Init (FIXED ✅)
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=terraform-bucket-prabhjot" \
+            -backend-config="key=${{ env.ENV }}/terraform.tfstate" \
+            -backend-config="region=ap-south-1" \
+            -reconfigure
+        working-directory: environments/${{ env.ENV }}
+
+      # 8️⃣ Terraform Plan (optional but recommended)
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: environments/${{ env.ENV }}
+
+      # 9️⃣ Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: environments/${{ env.ENV }}

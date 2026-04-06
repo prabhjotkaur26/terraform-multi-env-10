@@ -10,5 +10,5 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "my-app-${var.env}-12345"
+  bucket = "dev-terraform-2026"
 }

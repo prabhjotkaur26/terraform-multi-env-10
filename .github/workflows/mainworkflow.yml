@@ -1,0 +1,57 @@
+name: terraform-multi-env-10
+
+on:
+  push:
+    branches: [dev, qa, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        default: dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - env: dev
+            region: ap-south-1
+          - env: qa
+            region: us-east-1
+          - env: prod
+            region: eu-west-1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup ENV
+        run: |
+          echo "ENV=${{ matrix.env }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ matrix.region }}" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: |
+          rm -rf .terraform
+          terraform init \
+            -backend-config="bucket=terraform-bucket-prabhjot" \
+            -backend-config="key=${{ env.ENV }}/terraform.tfstate" \
+            -backend-config="region=ap-south-1" \
+            -reconfigure
+        working-directory: environments/${{ env.ENV }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: environments/${{ env.ENV }}

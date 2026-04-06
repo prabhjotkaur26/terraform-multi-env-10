@@ -1,7 +1,7 @@
-name: Terraform Backend Setup
+name: terraform-multi-env-10
 
 on:
-  workflow_dispatch   # manual trigger
+  workflow_dispatch:   # manual trigger
 
 jobs:
   terraform:
@@ -22,11 +22,17 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID}}
-          aws-region: ap-south-1   # default only
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-region: ap-south-1
 
       - name: Terraform Init (LOCAL backend)
         run: terraform init
 
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve tfplan

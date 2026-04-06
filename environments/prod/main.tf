@@ -7,11 +7,9 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-west-1"
+  region = var.aws_region
 }
 
-module "s3" {
-  source      = "../../modules/s3"
-  bucket_name = "prabh-prod-123"
-  env         = "prod"
+resource "aws_s3_bucket" "bucket" {
+  bucket = "prod-terraform-2026"
 }

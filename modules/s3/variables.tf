@@ -1,2 +1,3 @@
-variable "bucket_name" {}
-variable "env" {}
+variable "regions" {
+  default = ["ap-south-1", "us-east-1", "eu-west-1"]
+}

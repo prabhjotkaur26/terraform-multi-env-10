@@ -1,3 +1,1 @@
-variable "regions" {
-  default = ["ap-south-1", "us-east-1", "eu-west-1"]
-}
+variable "aws_region" {}

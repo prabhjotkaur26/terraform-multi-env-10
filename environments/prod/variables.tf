@@ -1,2 +1,4 @@
-variable "aws_region" {}
-variable "env" {}
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+}

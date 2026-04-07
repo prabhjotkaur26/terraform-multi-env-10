@@ -1,10 +1,9 @@
 provider "aws" {
   region = var.aws_region
 }
-terraform {
-  backend "s3" {
-    bucket = "dev-backend-buckett "
-    key    = "dev/terraform.tfstate"
-    region = "ap-south-1"
-  }
+
+module "s3" {
+  source      = "../../modules/s3"
+  bucket_name = var.bucket_name
+  environment = var.environment
 }

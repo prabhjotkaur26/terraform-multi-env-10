@@ -13,6 +13,7 @@ resource "aws_s3_bucket" "bucket" {
 module "s3" {
   source = "./modules/s3"
 
-  aws_region = var.aws_region
-  env        = var.environment
+  aws_region  = var.aws_region   # ✅ ADD THIS
+  bucket_name = var.bucket_name
+  environment = var.environment
 }

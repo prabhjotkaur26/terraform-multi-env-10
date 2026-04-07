@@ -7,3 +7,14 @@ resource "aws_s3_bucket" "bucket" {
     ManagedBy   = "Terraform"
   }
 }
+provider "aws" {
+  region = "your-region"
+}
+
+module "s3" {
+  source = "./s3"
+
+  providers = {
+    aws = aws
+  }
+}

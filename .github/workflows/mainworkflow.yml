@@ -1,4 +1,4 @@
-name: Terraform S3 Manual Deployment
+name: terraform-multi-env-10
 
 on:
   workflow_dispatch:
@@ -24,11 +24,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # ✅ Set ENV
       - name: Set Environment Variable
         run: echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
 
-      # ✅ Map Region
       - name: Set AWS Region
         run: |
           if [[ "${{ github.event.inputs.environment }}" == "dev" ]]; then
@@ -39,7 +37,6 @@ jobs:
             echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV
           fi
 
-      # 🔥 Generate Final Bucket Name
       - name: Generate Bucket Name
         run: |
           FINAL_NAME="${{ github.event.inputs.base_bucket_name }}-${{ github.event.inputs.environment }}"

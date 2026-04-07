@@ -10,3 +10,9 @@ resource "aws_s3_bucket" "bucket" {
     ManagedBy   = "Terraform"
   }
 }
+module "s3" {
+  source = "./modules/s3"
+
+  aws_region = var.aws_region
+  env        = var.environment
+}

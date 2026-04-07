@@ -1,3 +1,7 @@
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+}
 variable "bucket_name" {
   description = "Final bucket name (auto-generated)"
   type        = string

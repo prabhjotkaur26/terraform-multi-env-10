@@ -12,6 +12,14 @@ on:
           - qa
           - prod
 
+      action:
+        description: "Select action"
+        required: true
+        type: choice
+        options:
+          - apply
+          - destroy
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -40,8 +48,11 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # ✅ FIXED
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Clean Terraform Cache
+        run: rm -rf .terraform
 
       - name: Terraform Init
         working-directory: environments/${{ env.ENVIRONMENT }}
@@ -55,8 +66,17 @@ jobs:
           -var="environment=${{ env.ENVIRONMENT }}"
 
       - name: Terraform Apply
+        if: ${{ github.event.inputs.action == 'apply' }}
         working-directory: environments/${{ env.ENVIRONMENT }}
         run: |
           terraform apply -auto-approve \
+          -var="aws_region=${{ env.AWS_REGION }}" \
+          -var="environment=${{ env.ENVIRONMENT }}"
+
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        working-directory: environments/${{ env.ENVIRONMENT }}
+        run: |
+          terraform destroy -auto-approve \
           -var="aws_region=${{ env.AWS_REGION }}" \
           -var="environment=${{ env.ENVIRONMENT }}"

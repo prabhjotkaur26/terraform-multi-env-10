@@ -12,10 +12,6 @@ on:
           - qa
           - prod
 
-      base_bucket_name:
-        description: "Enter Base Bucket Name (e.g. abc)"
-        required: true
-
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -37,19 +33,6 @@ jobs:
             echo "AWS_REGION=eu-west-1" >> $GITHUB_ENV
           fi
 
-      - name: Generate Bucket Name
-        run: |
-          FINAL_NAME="${{ github.event.inputs.base_bucket_name }}-${{ github.event.inputs.environment }}"
-          echo "BUCKET_NAME=$FINAL_NAME" >> $GITHUB_ENV
-
-      # (Optional) Validate bucket name
-      - name: Validate Bucket Name
-        run: |
-          if [[ ! "${{ env.BUCKET_NAME }}" =~ ^[a-z0-9.-]+$ ]]; then
-            echo "Invalid bucket name format"
-            exit 1
-          fi
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -57,7 +40,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
@@ -69,13 +52,11 @@ jobs:
         run: |
           terraform plan \
           -var="aws_region=${{ env.AWS_REGION }}" \
-          -var="environment=${{ env.ENVIRONMENT }}" \
-          -var="bucket_name=${{ env.BUCKET_NAME }}"
+          -var="environment=${{ env.ENVIRONMENT }}"
 
       - name: Terraform Apply
         working-directory: environments/${{ env.ENVIRONMENT }}
         run: |
           terraform apply -auto-approve \
           -var="aws_region=${{ env.AWS_REGION }}" \
-          -var="environment=${{ env.ENVIRONMENT }}" \
-          -var="bucket_name=${{ env.BUCKET_NAME }}"
+          -var="environment=${{ env.ENVIRONMENT }}"

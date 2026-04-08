@@ -1,10 +1,9 @@
-provider "aws" {
-  region = var.aws_region
-}
+resource "aws_instance" "example" {
+  ami           = var.ami_map[var.aws_region]
+  instance_type = "t2.micro"
 
-# EC2 Module
-module "ec2" {
-  source      = "../../modules/ec2"
-  environment = var.environment
-  aws_region  = var.aws_region
+  tags = {
+    Name        = "${var.environment}-ec2"
+    Environment = var.environment
+  }
 }

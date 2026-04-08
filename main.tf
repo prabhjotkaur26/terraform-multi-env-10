@@ -1,20 +1,9 @@
-resource "aws_s3_bucket" "bucket" {
-  bucket = var.bucket_name
-
-  tags = {
-    Name        = var.bucket_name
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
-}
 provider "aws" {
-  region = "your-region"
+  region = var.aws_region
 }
 
-module "s3" {
-  source = "./s3"
-
-  providers = {
-    aws = aws
-  }
+module "ec2" {
+  source      = "./ec2"
+  environment = var.environment
+  aws_region  = var.aws_region
 }

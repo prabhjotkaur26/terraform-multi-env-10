@@ -1,5 +1,15 @@
-variable "environment" {}
-variable "aws_region" {}
+variable "environment" {
+  type = string
+}
+
+variable "aws_region" {
+  type = string
+}
+
+variable "instance_type" {
+  type    = string
+  default = "t3.micro"
+}
 
 variable "ami_map" {
   type = map(string)
